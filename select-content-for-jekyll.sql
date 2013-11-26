@@ -1,7 +1,7 @@
 SELECT
 FilePath = (
 CASE c.PostType 
-WHEN 2 THEN 'articles-' + c.EntryName + '.aspx.markdown' 
+WHEN 2 THEN 'articles/' + c.EntryName + '.aspx.markdown' 
 ELSE SUBSTRING(CONVERT(VARCHAR, DATEADD(hh, blog.TimeZoneOffset, c.DatePublishedUtc), 120), 1, 10) + '-' + c.EntryName + '.aspx.markdown' 
 END),
 Content = 
