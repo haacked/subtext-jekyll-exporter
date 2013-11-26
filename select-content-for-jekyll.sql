@@ -1,8 +1,12 @@
 SELECT
-FilePath = SUBSTRING(CONVERT(VARCHAR, DATEADD(hh, blog.TimeZoneOffset, c.DatePublishedUtc), 120), 1, 10) + '-' + c.EntryName + '.aspx.markdown',
+FilePath = (
+CASE c.PostType 
+WHEN 2 THEN 'articles-' + c.EntryName + '.aspx.markdown' 
+ELSE SUBSTRING(CONVERT(VARCHAR, DATEADD(hh, blog.TimeZoneOffset, c.DatePublishedUtc), 120), 1, 10) + '-' + c.EntryName + '.aspx.markdown' 
+END),
 Content = 
 '---
-layout: post
+layout: ' + (CASE c.PostType WHEN 2 THEN 'page' ELSE 'post' END) + '
 title: "' + REPLACE(c.Title, '"', '&quot;') + '"
 date: ' + SUBSTRING(CONVERT(VARCHAR, DATEADD(hh, blog.TimeZoneOffset, c.DatePublishedUtc), 120), 1, 10) + '
 comments: true
