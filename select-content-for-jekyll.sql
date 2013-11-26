@@ -20,3 +20,4 @@ FROM subtext_Content c
 INNER JOIN subtext_Config blog
 ON c.BlogID = blog.BlogID
 WHERE blog.BlogID = 0
+ AND c.PostConfig & 1 = 1
