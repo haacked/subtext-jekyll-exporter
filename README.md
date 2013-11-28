@@ -1,6 +1,10 @@
-subtext-jekyll-exporter
+Subtext Jekyll Exporter
 =======================
 
-Some scripts to export Subtext to Jekyll
+A console app that exports a Subtext database to Jekyll (Octopress) formatted post files.
 
-Right now I'm focused on the Octopress formats.
+## LICENSE
+
+Subtext Jekyll Exporter is licened under an [MIT License](LICENSE).
+
+However, it shells out to Pandoc which is licensed under [the GPL](http://www.gnu.org/copyleft/gpl.html).
