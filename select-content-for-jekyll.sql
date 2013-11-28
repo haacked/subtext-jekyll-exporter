@@ -4,25 +4,20 @@ SELECT FilePath = (
     ELSE SUBSTRING(CONVERT(VARCHAR, DATEADD(HH, blog.TimeZoneOffset, c.DatePublishedUtc), 120), 1, 10) 
         + '-' + c.EntryName + '.aspx.markdown' 
     END),
-Content = 
-'---
-layout: ' + (CASE c.PostType WHEN 2 THEN 'page' ELSE 'post' END) + '
-title: "' + REPLACE(c.Title, '"', '&quot;') + '"
-date: ' + SUBSTRING(CONVERT(VARCHAR, DATEADD(HH, blog.TimeZoneOffset, c.DatePublishedUtc), 120), 1, 10) + ' ' + 
+c.[Text],
+Layout = (CASE c.PostType WHEN 2 THEN 'page' ELSE 'post' END),
+Title = REPLACE(c.Title, '"', '&quot;'),
+[Date] = SUBSTRING(CONVERT(VARCHAR, DATEADD(HH, blog.TimeZoneOffset, c.DatePublishedUtc), 120), 1, 10) + ' ' + 
     (CASE WHEN blog.TimeZoneOffset < 0 
-    THEN '-' else '' END + RIGHT('00' + replace(blog.TimeZoneOffset, '-', ''), 2)) + '00
-comments: true
-categories: [' + 
+    THEN '-' else '' END + RIGHT('00' + replace(blog.TimeZoneOffset, '-', ''), 2)) + '00',
+Categories = '[' + 
  ISNULL(SUBSTRING(
    (SELECT ',' + cat.Title AS [text()]
     FROM subtext_LinkCategories cat 
     INNER JOIN subtext_Links l
     ON l.CategoryID = cat.CategoryID
     WHERE c.ID = l.PostID
-    FOR XML PATH ('')), 2, 1000), '') + ']
----
-
-' + CAST(c.[Text] as NVARCHAR(MAX))
+    FOR XML PATH ('')), 2, 1000), '') + ']'
 FROM subtext_Content c
 INNER JOIN subtext_Config blog
 ON c.BlogID = blog.BlogID

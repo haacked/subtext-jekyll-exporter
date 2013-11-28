@@ -4,3 +4,4 @@ C:\dev\subtext-jekyll-exporter\SubtextJekyllExporter\SubtextJekyllExporter\bin\D
 C:\dev\subtext-jekyll-exporter\SubtextJekyllExporter\SubtextJekyllExporter\obj\Debug\SubtextJekyllExporter.csprojResolveAssemblyReference.cache
 C:\dev\subtext-jekyll-exporter\SubtextJekyllExporter\SubtextJekyllExporter\obj\Debug\SubtextJekyllExporter.exe
 C:\dev\subtext-jekyll-exporter\SubtextJekyllExporter\SubtextJekyllExporter\obj\Debug\SubtextJekyllExporter.pdb
+C:\dev\subtext-jekyll-exporter\SubtextJekyllExporter\SubtextJekyllExporter\bin\Debug\pandoc.exe
