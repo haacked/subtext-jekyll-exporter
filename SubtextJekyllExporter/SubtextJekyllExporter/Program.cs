@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -15,9 +16,10 @@ layout: {0}
 title: ""{1}""
 date: {2}
 comments: true
-categories: {3}
+disqus_identifier: {3}
+categories: {4}
 ---
-{4}
+{5}
 ";
         private static void Main(string[] args)
         {
@@ -45,8 +47,9 @@ categories: {3}
                         string title = reader.GetString(3);
                         string date = reader.GetString(4);
                         string categories = reader.GetString(5);
+                        string postId = reader.GetInt32(6).ToString(CultureInfo.InvariantCulture);
 
-                        string formattedContent = String.Format(postFormat, layout, title, date, categories, content);
+                        string formattedContent = String.Format(postFormat, layout, title, date, postId, categories, content);
 
                         var path = Path.Combine(rootDirectory, filePath);
                         EnsurePath(path);

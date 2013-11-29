@@ -17,7 +17,8 @@ Categories = '[' +
     INNER JOIN subtext_Links l
     ON l.CategoryID = cat.CategoryID
     WHERE c.ID = l.PostID
-    FOR XML PATH ('')), 2, 1000), '') + ']'
+    FOR XML PATH ('')), 2, 1000), '') + ']',
+Id
 FROM subtext_Content c
 INNER JOIN subtext_Config blog
 ON c.BlogID = blog.BlogID
