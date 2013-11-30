@@ -42,7 +42,7 @@ categories: {4}
                     while (reader.Read())
                     {
                         string filePath = reader.GetString(0).Replace(Environment.NewLine, "");
-                        string content = FormatCode(EscapeJekyllTags(ConvertHtmlToMarkdown(reader.GetString(1))));
+                        string content = FormatCode(EscapeJekyllTags(ConvertHtmlToMarkdown(StripTagsDiv(reader.GetString(1)))));
                         string layout = reader.GetString(2);
                         string title = reader.GetString(3);
                         string date = reader.GetString(4);
@@ -126,6 +126,15 @@ categories: {4}
             if (trimmedCode.Contains("<%= ") || trimmedCode.Contains("<%: ")) return "aspx-cs";
             if (trimmedCode.StartsWith("<script") || trimmedCode.StartsWith("<table")) return "html";
             return "csharp";
+        }
+
+        static readonly Regex _tagsRegex = new Regex(@"<div[^>]+?class=""(tags(\s*clear)?|wlWriterEditableSmartContent)"">.*?</div>", RegexOptions.Compiled | RegexOptions.Singleline);
+        // Strip the DIVs for tags that Windows Live Writer inserts.
+        //   <div class="tags">Technorati Tags:...</div>
+        //   <div class="tags clear">Technorati Tags:...</div>
+        //   <div style="..." id="scid:..." class="wlWriterEditableSmartContent">        public static string StripTagsDiv(string content)
+        {
+            return _tagsRegex.Replace(content, "");
         }
     }
 }

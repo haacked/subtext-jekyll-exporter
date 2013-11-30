@@ -50,6 +50,7 @@
   <ItemGroup>
     <EmbeddedResource Include="..\..\select-content-for-jekyll.sql">
       <Link>select-content-for-jekyll.sql</Link>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
