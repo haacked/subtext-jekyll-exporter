@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace SubtextJekyllExporter
 {
@@ -23,44 +27,65 @@ categories: {4}
 ";
         private static void Main(string[] args)
         {
-            if (args.Length != 2)
+            if (args.Length != 3)
             {
-                Console.WriteLine("Please pass a database name and an export directory.");
+                Console.WriteLine("Please pass a database name, an export directory, and your current blog host.");
                 return;
             }
-
             string databaseName = args[0];
             string rootDirectory = args[1];
+            string host = args[2];
             string connectionString =
-            String.Format(@"Data Source=.\SQLEXPRESS;Initial Catalog={0};Integrated Security=True", databaseName);
-            using (var connection = new SqlConnection(connectionString))
+                String.Format(@"Data Source=.\SQLEXPRESS;Initial Catalog={0};Integrated Security=True", databaseName);
+            using (var mismatches = new StreamWriter(Path.Combine(rootDirectory, ".mismatches")))
             {
-                connection.Open();
-                var command = new SqlCommand(GetExportSqlScript(), connection);
-                using (var reader = command.ExecuteReader())
+                using (var connection = new SqlConnection(connectionString))
                 {
-                    while (reader.Read())
+                    connection.Open();
+                    var command = new SqlCommand(GetExportSqlScript(), connection);
+                    using (var reader = command.ExecuteReader())
                     {
-                        string filePath = reader.GetString(0).Replace(Environment.NewLine, "");
-                        string content = FormatCode(EscapeJekyllTags(ConvertHtmlToMarkdown(StripTagsDiv(reader.GetString(1)))));
-                        string layout = reader.GetString(2);
-                        string title = reader.GetString(3);
-                        string date = reader.GetString(4);
-                        string categories = reader.GetString(5);
-                        string postId = reader.GetInt32(6).ToString(CultureInfo.InvariantCulture);
+                        while (reader.Read())
+                        {
+                            string filePath = reader.GetString(0).Replace(Environment.NewLine, "");
+                            string content = FormatCode(EscapeJekyllTags(ConvertHtmlToMarkdown(StripTagsDiv(reader.GetString(1)))));
+                            string layout = reader.GetString(2);
+                            string title = reader.GetString(3);
+                            string date = reader.GetString(4);
+                            string categories = reader.GetString(5);
+                            string postId = reader.GetInt32(6).ToString(CultureInfo.InvariantCulture);
+                            string slug = reader.GetString(7);
+                            string urlDate = reader.GetString(8);
 
-                        string formattedContent = String.Format(postFormat, layout, title, date, postId, categories, content);
+                            string formattedContent = String.Format(postFormat, layout, title, date, postId, categories, content);
 
-                        var path = Path.Combine(rootDirectory, filePath);
-                        EnsurePath(path);
-                        Console.WriteLine("Writing: " + title);
-                        File.WriteAllText(path, formattedContent, new UTF8Encoding(false));
+                            var postUrl =
+                                new Uri("http://" + host + "/archive/" + urlDate + "/" + slug + ".aspx");
+                            try
+                            {
+                                var exists = CheckPostExistence(postUrl).Result;
+                                if (!exists)
+                                {
+                                    mismatches.WriteLine(postUrl);
+
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                mismatches.WriteLine("EXCEPTION: " + postUrl);
+                            }
+
+                            var path = Path.Combine(rootDirectory, filePath);
+                            EnsurePath(path);
+                            Console.WriteLine("Writing: " + title);
+                            File.WriteAllText(path, formattedContent, new UTF8Encoding(false));
+                        }
                     }
                 }
             }
         }
 
-        private static string GetExportSqlScript()
+        static string GetExportSqlScript()
         {
             var assembly = Assembly.GetExecutingAssembly();
             const string resourceName = "SubtextJekyllExporter.select-content-for-jekyll.sql";
@@ -72,12 +97,12 @@ categories: {4}
             }
         }
 
-        private static void EnsurePath(string path)
+        static void EnsurePath(string path)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path));
         }
 
-        public static string ConvertHtmlToMarkdown(string source)
+        static string ConvertHtmlToMarkdown(string source)
         {
             string args = String.Format(@"-r html -t markdown");
 
@@ -102,7 +127,7 @@ categories: {4}
             }
         }
 
-        private static string EscapeJekyllTags(string content)
+        static string EscapeJekyllTags(string content)
         {
             return content
                 .Replace("{{", "{{ \"{{\" }}")
@@ -111,7 +136,7 @@ categories: {4}
 
         static readonly Regex _codeRegex = new Regex(@"~~~~ \{\.csharpcode\}(?<code>.*?)~~~~", RegexOptions.Compiled | RegexOptions.Singleline);
 
-        private static string FormatCode(string content)
+        static string FormatCode(string content)
         {
             return _codeRegex.Replace(content, match =>
             {
@@ -120,7 +145,7 @@ categories: {4}
             });
         }
 
-        private static string GetLanguage(string code)
+        static string GetLanguage(string code)
         {
             var trimmedCode = code.Trim();
             if (trimmedCode.Contains("<%= ") || trimmedCode.Contains("<%: ")) return "aspx-cs";
@@ -132,9 +157,19 @@ categories: {4}
         // Strip the DIVs for tags that Windows Live Writer inserts.
         //   <div class="tags">Technorati Tags:...</div>
         //   <div class="tags clear">Technorati Tags:...</div>
-        //   <div style="..." id="scid:..." class="wlWriterEditableSmartContent">        public static string StripTagsDiv(string content)
+        //   <div style="..." id="scid:..." class="wlWriterEditableSmartContent">
+
+        static string StripTagsDiv(string content)
         {
             return _tagsRegex.Replace(content, "");
+        }
+
+        private static async Task<bool> CheckPostExistence(Uri uri)
+        {
+            var httpClient = new HttpClient();
+            var request = new HttpRequestMessage {Method = HttpMethod.Head, RequestUri = uri};
+            var response = await httpClient.SendAsync(request);
+            return response.StatusCode == HttpStatusCode.OK;
         }
     }
 }

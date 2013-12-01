@@ -18,7 +18,9 @@ Categories = '[' +
     ON l.CategoryID = cat.CategoryID
     WHERE c.ID = l.PostID
     FOR XML PATH ('')), 2, 1000), '') + ']',
-Id
+Id,
+c.EntryName,
+UrlDate = SUBSTRING(CONVERT(VARCHAR, DATEADD(HH, blog.TimeZoneOffset, c.DatePublishedUtc), 111), 1, 10)
 FROM subtext_Content c
 INNER JOIN subtext_Config blog
 ON c.BlogID = blog.BlogID
